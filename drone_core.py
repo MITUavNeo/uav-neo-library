@@ -1,0 +1,160 @@
+"""
+Copyright MIT
+MIT License
+
+UAV Neo Drone Course
+
+File Name: drone_core.py
+File Description: Contains the Drone class, the top level of the drone_core library.
+"""
+
+import abc
+import sys
+from typing import Callable, Optional
+
+import camera
+import controller
+import display
+import flight
+import physics
+import telemetry
+
+import drone_utils as rc_utils
+
+
+class Drone(abc.ABC):
+    """
+    The top level drone module containing several submodules which interface
+    with and control the different pieces of the drone hardware.
+    """
+
+    def __init__(self) -> None:
+        self.camera: camera.Camera
+        self.controller: controller.Controller
+        self.display: display.Display
+        self.flight: flight.Flight
+        self.physics: physics.Physics
+        self.telemetry: telemetry.Telemetry
+
+    @abc.abstractmethod
+    def go(self) -> None:
+        """
+        Starts the drone, beginning in default mode.
+
+        Note:
+            go blocks execution until the program is exited.
+        """
+        pass
+
+    @abc.abstractmethod
+    def set_start_update(
+        self,
+        start: Callable[[], None],
+        update: Callable[[], None],
+        update_slow: Optional[Callable[[], None]] = None,
+    ) -> None:
+        """
+        Sets the start and update functions used in user program mode.
+
+        Args:
+            start: A function called once when the drone enters user program mode.
+            update: A function called every frame in user program mode.
+            update_slow: A function called once per fixed time interval in user
+                program mode (by default once per second).
+
+        Example::
+
+            rc = Drone()
+
+            def start():
+                print("This function is called once")
+
+            def update():
+                print("This function is called every frame")
+
+            rc.set_start_update(start, update)
+            rc.go()
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_delta_time(self) -> float:
+        """
+        Returns the number of seconds elapsed in the previous frame.
+
+        Returns:
+            The number of seconds between the start of the previous frame and
+            the start of the current frame.
+
+        Example::
+
+            counter += rc.get_delta_time()
+        """
+        pass
+
+    @abc.abstractmethod
+    def set_update_slow_time(self, time: float = 1.0) -> None:
+        """
+        Changes the time between calls to update_slow.
+
+        Args:
+            time: The time in seconds between calls to update_slow.
+
+        Example::
+
+            rc.set_update_slow_time(2)
+        """
+        pass
+
+
+def create_drone(isSimulation: Optional[bool] = None) -> Drone:
+    """
+    Generates a drone object based on the isSimulation argument or execution flags.
+
+    Args:
+        isSimulation: If True, create a DroneSim. If None, decide based on
+            the command line arguments.
+
+    Returns:
+        A DroneSim object for use with the Unity simulation.
+
+    Note:
+        If isSimulation is None, this function will return a DroneSim if the program
+        was executed with the "-s" flag.
+
+        If the program was executed with the "-d" flag, a display window is created.
+
+        If the program was executed with the "-h" flag, it is run in headless mode,
+        which disables the display module.
+    """
+    library_path: str = __file__.replace("drone_core.py", "")
+    is_headless: bool = "-h" in sys.argv
+    initialize_display: bool = "-d" in sys.argv
+
+    if isSimulation is None:
+        isSimulation = "-s" in sys.argv
+
+    drone: Drone
+    if isSimulation:
+        sys.path.insert(1, library_path + "simulation")
+        from drone_core_sim import DroneSim
+
+        drone = DroneSim(is_headless)
+    else:
+        rc_utils.print_error(
+            ">> Real drone mode is not yet available. Please use -s for simulation."
+        )
+        sys.exit(1)
+
+    if initialize_display:
+        drone.display.create_window()
+
+    rc_utils.print_colored(
+        ">> Drone created with the following options:"
+        + f"\n    Simulation (-s): [{isSimulation}]"
+        + f"\n    Headless (-h): [{is_headless}]"
+        + f"\n    Initialize with display (-d): [{initialize_display}]",
+        rc_utils.TerminalColor.pink,
+    )
+
+    return drone
