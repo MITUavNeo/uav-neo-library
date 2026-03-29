@@ -1,0 +1,17 @@
+name: Deploy to gh-pages on push
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v2
+      - run: "sudo apt install -y python3-sphinx && pip install -r requirements.txt && make html"
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: '${{ secrets.GITHUB_TOKEN }}'
+          publish_dir: './_build/html'
