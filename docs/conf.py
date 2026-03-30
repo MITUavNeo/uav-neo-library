@@ -20,6 +20,13 @@ extensions = [
     'myst_parser'
 ]
 
+autodoc_mock_imports = [
+    'numpy',
+    'nptyping',
+    'cv2',
+    'pandas',
+]
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
