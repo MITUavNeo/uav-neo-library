@@ -4,7 +4,8 @@ Physics simulation module — queries sensor data from the UAVNeo Simulator via 
 
 import struct
 import numpy as np
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 
 from physics import Physics
 

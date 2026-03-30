@@ -13,7 +13,8 @@ from physics import Physics
 # General
 from collections import deque
 import numpy as np
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 
 # ROS2
 import rclpy as ros2
@@ -28,10 +29,13 @@ from geometry_msgs.msg import TwistStamped
 
 
 class PhysicsReal(Physics):
-    # The ROS topic from which we read imu data
-    __IMU_TOPIC = "/imu" 
+    # MAVROS IMU (flight controller — orientation, angular velocity, acceleration)
+    __MAVROS_IMU_TOPIC = "/mavros/imu/data"
+    # RealSense IMU (camera — high-rate accelerometer and gyroscope)
+    __REALSENSE_IMU_TOPIC = "/camera/imu"
+    # GPS and velocity (relayed by teleop.launch.py)
     __NAV_TOPIC = "/nav"
-    __TWIST_TOPIC = "/twist"
+    __VELOCITY_TOPIC = "/velocity"
 
     # Limit on buffer size to prevent memory overflow
     __BUFFER_CAP = 60
@@ -44,56 +48,67 @@ class PhysicsReal(Physics):
         qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
         qos_profile.durability = QoSDurabilityPolicy.VOLATILE
 
-        # subscribe to the imu topic, which will call
-        # __imu_callback every time the IMU publishes data
-        self.__imu_sub = self.node.create_subscription(
-            Imu, self.__IMU_TOPIC, self.__imu_callback, qos_profile
+        # MAVROS IMU (primary — Pixhawk EKF-fused orientation, accel, gyro)
+        # The Pixhawk's internal EKF already fuses its own sensors and provides
+        # data in a consistent body frame. This is the authority for flight.
+        self.__mavros_imu_sub = self.node.create_subscription(
+            Imu, self.__MAVROS_IMU_TOPIC, self.__mavros_imu_callback, qos_profile
         )
-        
-        # subscribe to the nav topic, which will call
-        # __nav_callback every time the IMU publishes data
+
+        # RealSense IMU is NOT fused here — it uses a different coordinate frame
+        # (camera optical: Y=down, Z=forward) vs MAVROS (ENU/NED body frame).
+        # It is useful for VIO pipelines but not for direct student access.
+
+        # GPS
         self.__nav_sub = self.node.create_subscription(
             NavSatFix, self.__NAV_TOPIC, self.__nav_callback, qos_profile
         )
 
-        # subscribe to the twist topic, which will call
-        # __twist_callback every time the IMU publishes data
-        self.__twist_sub = self.node.create_subscription(
-            TwistStamped, self.__TWIST_TOPIC, self.__twist_callback, qos_profile
+        # Velocity
+        self.__velocity_sub = self.node.create_subscription(
+            TwistStamped, self.__VELOCITY_TOPIC, self.__velocity_callback, qos_profile
         )
 
-        self.__acceleration = np.array([0, 0, 0])
+        self.__acceleration = np.array([0.0, 0.0, 0.0])
         self.__acceleration_buffer = deque()
-        self.__linear_velocity = np.array([0, 0, 0])
+        self.__linear_velocity = np.array([0.0, 0.0, 0.0])
         self.__linear_velocity_buffer = deque()
-        self.__angular_velocity = np.array([0, 0, 0])
+        self.__angular_velocity = np.array([0.0, 0.0, 0.0])
         self.__angular_velocity_buffer = deque()
         self.__altitude = 0.0
         self.__altitude_buffer = deque()
-        self.__attitude = np.array([0, 0, 0])
+        self.__attitude = np.array([0.0, 0.0, 0.0])
         self.__attitude_buffer = deque()
-        self.__gps = np.array([0, 0, 0])
+        self.__gps = np.array([0.0, 0.0, 0.0])
         self.__gps_buffer = deque()
 
-    def __imu_callback(self, data):
-        new_acceleration = np.array(
-            [data.linear_acceleration.x, data.linear_acceleration.y, data.linear_acceleration.z]
-        )
+    def __mavros_imu_callback(self, data):
+        """IMU callback — uses Pixhawk EKF data directly (consistent body frame)."""
+        new_accel = np.array([
+            data.linear_acceleration.x,
+            data.linear_acceleration.y,
+            data.linear_acceleration.z,
+        ])
 
-        self.__acceleration_buffer.append(new_acceleration)
+        self.__acceleration_buffer.append(new_accel)
         if len(self.__acceleration_buffer) > self.__BUFFER_CAP:
             self.__acceleration_buffer.popleft()
 
-        new_angular_velocity = np.array(
-            [data.angular_velocity.x, data.angular_velocity.y, data.angular_velocity.z]
-        )
+        new_gyro = np.array([
+            data.angular_velocity.x,
+            data.angular_velocity.y,
+            data.angular_velocity.z,
+        ])
 
-        self.__angular_velocity_buffer.append(new_angular_velocity)
+        self.__angular_velocity_buffer.append(new_gyro)
         if len(self.__angular_velocity_buffer) > self.__BUFFER_CAP:
             self.__angular_velocity_buffer.popleft()
 
         new_attitude = np.array(
-            quaternion_to_euler_angle_vectorized2(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
+            quaternion_to_euler_angle_vectorized2(
+                data.orientation.w, data.orientation.x,
+                data.orientation.y, data.orientation.z,
+            )
         )
 
         self.__attitude_buffer.append(new_attitude)
@@ -101,26 +116,24 @@ class PhysicsReal(Physics):
             self.__attitude_buffer.popleft()
 
     def __nav_callback(self, data):
-        new_altitude = float(
-            data.altitude
-        )
+        new_altitude = float(data.altitude)
 
         self.__altitude_buffer.append(new_altitude)
         if len(self.__altitude_buffer) > self.__BUFFER_CAP:
             self.__altitude_buffer.popleft()
 
-        new_gps = np.array(
-            [data.latitude, data.longitude, data.altitude]
-        )
-            
+        new_gps = np.array([data.latitude, data.longitude, data.altitude])
+
         self.__gps_buffer.append(new_gps)
         if len(self.__gps_buffer) > self.__BUFFER_CAP:
             self.__gps_buffer.popleft()
- 
-    def __twist_callback(self, data):
-        new_linear_velocity = np.array(
-            [data.linear.x, data.linear.y, data.linear.z]
-        )
+
+    def __velocity_callback(self, data):
+        new_linear_velocity = np.array([
+            data.twist.linear.x,
+            data.twist.linear.y,
+            data.twist.linear.z,
+        ])
 
         self.__linear_velocity_buffer.append(new_linear_velocity)
         if len(self.__linear_velocity_buffer) > self.__BUFFER_CAP:
@@ -133,20 +146,20 @@ class PhysicsReal(Physics):
 
         if len(self.__linear_velocity_buffer) > 0:
             self.__linear_velocity = np.mean(self.__linear_velocity_buffer, axis=0)
-            self.__linear_velocity_buffer.clear() 
+            self.__linear_velocity_buffer.clear()
 
         if len(self.__angular_velocity_buffer) > 0:
             self.__angular_velocity = np.mean(self.__angular_velocity_buffer, axis=0)
-            self.__angular_velocity_buffer.clear() 
-            
+            self.__angular_velocity_buffer.clear()
+
         if len(self.__altitude_buffer) > 0:
-            self.__altitude = np.mean(self.__altitude, axis=0)
+            self.__altitude = float(np.mean(self.__altitude_buffer))
             self.__altitude_buffer.clear()
 
         if len(self.__attitude_buffer) > 0:
             self.__attitude = np.mean(self.__attitude_buffer, axis=0)
-            self.__attitude_buffer.clear() 
-            
+            self.__attitude_buffer.clear()
+
         if len(self.__gps_buffer) > 0:
             self.__gps = np.mean(self.__gps_buffer, axis=0)
             self.__gps_buffer.clear()
@@ -156,20 +169,21 @@ class PhysicsReal(Physics):
 
     def get_linear_velocity(self) -> NDArray[3, np.float32]:
         return np.array(self.__linear_velocity)
-    
+
     def get_angular_velocity(self) -> NDArray[3, np.float32]:
-        return np.array(self.__angular_velocity) 
+        return np.array(self.__angular_velocity)
 
     def get_altitude(self) -> NDArray[3, np.float32]:
-        return np.array(self.__altitude) 
-    
+        return np.array(self.__altitude)
+
     def get_attitude(self) -> NDArray[3, np.float32]:
         return np.array(self.__attitude)
 
     def get_gps(self) -> NDArray[3, np.float32]:
-        return np.array(self.__gps) 
- 
-def quaternion_to_euler_angle_vectorized2(w, x, y, z): 
+        return np.array(self.__gps)
+
+
+def quaternion_to_euler_angle_vectorized2(w, x, y, z):
     ysqr = y * y
 
     t0 = +2.0 * (w * x + y * z)

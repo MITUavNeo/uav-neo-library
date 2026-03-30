@@ -16,12 +16,14 @@ from typing import Callable, Optional
 # ROS2
 import rclpy as ros2
 
-# racecar_core modules
+# drone_core modules
 import camera_real
 import controller_real
+import detector_real
 import display_real
 import flight_real
 import physics_real
+import state_real
 import telemetry_real
 
 from drone_core import Drone
@@ -35,32 +37,41 @@ class DroneReal(Drone):
     __FRAME_RATE = 60
 
     def __init__(self, isHeadless: bool = False):
-        # initialize ROS 2
-        ros2.init()
+        # initialize ROS 2 (guard against double-init in Jupyter)
+        if not ros2.ok():
+            ros2.init()
         self.__executor = ros2.get_global_executor()
         self.__rate_node = ros2.create_node("rate_node")
 
         # Modules
         self.camera = camera_real.CameraReal()
         self.controller = controller_real.ControllerReal(self)
+        self.detector = detector_real.DetectorReal()
         self.display = display_real.DisplayReal(isHeadless)
-        self.flight = flight_real.FlightReal() 
+        self.flight = flight_real.FlightReal()
         self.physics = physics_real.PhysicsReal()
+        self.state = state_real.StateReal()
         self.telemetry = telemetry_real.TelemetryReal()
 
         # Add all nodes to the executor
         rate_added = self.__executor.add_node(self.__rate_node)
         camera_added = self.__executor.add_node(self.camera.node)
+        detector_added = self.__executor.add_node(self.detector.node)
         flight_added = self.__executor.add_node(self.flight.node)
         controller_added = self.__executor.add_node(self.controller.node)
-        physics_added = self.__executor.add_node(self.physics.node) 
-        assert rate_added and flight_added and camera_added and controller_added and physics_added, (
+        physics_added = self.__executor.add_node(self.physics.node)
+        state_added = self.__executor.add_node(self.state.node)
+        telemetry_added = self.__executor.add_node(self.telemetry.node)
+        assert rate_added and flight_added and camera_added and controller_added and physics_added and detector_added and state_added and telemetry_added, (
             "Issues initializing Drone nodes. Node status: \n"
             f"Rate operational: {rate_added} | "
             f"Camera operational: {camera_added} | "
+            f"Detector operational: {detector_added} | "
             f"Flight operational: {flight_added} | "
             f"Controller operational: {controller_added} | "
-            f"Physics operational: {physics_added} | " 
+            f"Physics operational: {physics_added} | "
+            f"State operational: {state_added} | "
+            f"Telemetry operational: {telemetry_added} | "
         )
 
         # User provided start and update functions
@@ -81,7 +92,7 @@ class DroneReal(Drone):
         self.__max_update_counter = 1
         self.set_update_slow_time(self.__DEFAULT_UPDATE_SLOW_TIME)
 
-        # Start run_thread in default drive mode
+        # Start run_thread in default flight mode
         self.__handle_back()
         self.__run_thread = threading.Thread(target=self.__run)
         self.__run_thread.daemon = True
@@ -120,7 +131,7 @@ class DroneReal(Drone):
         self.__handle_start()
         while self.__running:
             self.__executor.spin_once()
-        
+
     def set_start_update(
         self,
         start: Callable[[], None],
@@ -177,14 +188,27 @@ class DroneReal(Drone):
         while True:
             self.__last_frame_time = self.__cur_frame_time
             self.__cur_frame_time = datetime.now()
-            self.__cur_update()
-            self.__update_modules()
+
+            try:
+                self.__cur_update()
+            except Exception as e:
+                print(f">> ERROR in update(): {e}")
+                # Ensure flight stops on user code crash
+                self.flight.stop()
+
+            try:
+                self.__update_modules()
+            except Exception as e:
+                print(f">> ERROR in update_modules(): {e}")
 
             # Use a counter to decide when we need to call update_slow
             if self.__cur_update_slow is not None:
                 self.__cur_update_counter -= 1
                 if self.__cur_update_counter <= 0:
-                    self.__cur_update_slow()
+                    try:
+                        self.__cur_update_slow()
+                    except Exception as e:
+                        print(f">> ERROR in update_slow(): {e}")
                     self.__cur_update_counter = self.__max_update_counter
 
             rate.sleep()
@@ -196,30 +220,22 @@ class DroneReal(Drone):
         self.flight._FlightReal__update()
         self.controller._ControllerReal__update()
         self.camera._CameraReal__update()
+        self.detector._DetectorReal__update()
         self.physics._PhysicsReal__update()
+        self.state._StateReal__update()
         self.telemetry._TelemetryReal__update()
 
     def __default_start(self):
         """
         The start function for default flight mode.
+        Manual stick control is handled by the mux node (LB held on Xbox).
         """
         self.flight.stop()
 
     def __default_update(self):
         """
         The update function for default flight mode.
-
-        Controls:
-            Left/right triggers: Throttle
-            Left joystick left/right: Yaw
-            Right joystick up/down: Pitch
-            Right joystick left/right: Roll
+        Flight commands are handled by the mux node, not the library.
+        This just keeps the flight module publishing zero setpoints.
         """
-        MAX_SPEED = 0.25   
-
-        pitch    = self.controller.get_joystick(self.controller.Joystick.RIGHT)[1] * MAX_SPEED
-        roll     = self.controller.get_joystick(self.controller.Joystick.RIGHT)[0] * MAX_SPEED
-        yaw      = self.controller.get_joystick(self.controller.Joystick.LEFT)[0]  * MAX_SPEED
-        throttle = (self.controller.get_trigger(self.controller.Trigger.RIGHT) - self.controller.get_trigger(self.controller.Trigger.LEFT))  * MAX_SPEED
-
-        self.flight.send_pcmd(pitch, roll, yaw, throttle)
+        pass

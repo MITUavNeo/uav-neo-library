@@ -11,7 +11,8 @@ File Description: Contains helper functions to support common operations.
 import cv2 as cv
 import numpy as np
 from typing import Any, Optional
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 from enum import Enum, IntEnum
 
 
@@ -54,7 +55,7 @@ def format_colored(text: str, color: TerminalColor) -> str:
     Example::
 
         # Prints "Hello World!", where "World" is blue
-        print("Hello " + format_colored("World", rc_utils.TerminalColor.blue) + "!")
+        print("Hello " + format_colored("World", uav_utils.TerminalColor.blue) + "!")
     """
     return f"\033[{color.value}m{text}\033[00m"
 
@@ -69,9 +70,9 @@ def print_colored(text: str, color: TerminalColor) -> None:
 
     Example::
 
-        rc_utils.print_colored("This will be black", rc_utils.TerminalColor.black)
-        rc_utils.print_colored("This will be red", rc_utils.TerminalColor.red)
-        rc_utils.print_colored("This will be green", rc_utils.TerminalColor.green)
+        uav_utils.print_colored("This will be black", uav_utils.TerminalColor.black)
+        uav_utils.print_colored("This will be red", uav_utils.TerminalColor.red)
+        uav_utils.print_colored("This will be green", uav_utils.TerminalColor.green)
     """
     print(format_colored(text, color))
 
@@ -86,7 +87,7 @@ def print_error(text: str) -> None:
     Example::
 
         # This text will be printed to the terminal in red
-        rc_utils.print_error("Error: No image detected")
+        uav_utils.print_error("Error: No image detected")
     """
     print_colored(text, TerminalColor.red)
 
@@ -101,7 +102,7 @@ def print_warning(text: str) -> None:
     Example::
 
         # This text will be printed to the terminal in yellow
-        rc_utils.print_warning("Warning: Potential collision detected, reducing speed")
+        uav_utils.print_warning("Warning: Potential collision detected, reducing speed")
     """
     print_colored(text, TerminalColor.yellow)
 
@@ -121,13 +122,13 @@ def clamp(value: float, min: float, max: float) -> float:
     Example::
 
         # a will be set to 3
-        a = rc_utils.clamp(3, 0, 10)
+        a = uav_utils.clamp(3, 0, 10)
 
         # b will be set to 0
-        b = rc_utils.clamp(-2, 0, 10)
+        b = uav_utils.clamp(-2, 0, 10)
 
         # c will be set to 10
-        c = rc_utils.clamp(11, 0, 10)
+        c = uav_utils.clamp(11, 0, 10)
     """
     return min if value < min else max if value > max else value
 
@@ -158,16 +159,16 @@ def remap_range(
     Example::
 
         # a will be set to 25
-        a = rc_utils.remap_range(5, 0, 10, 0, 50)
+        a = uav_utils.remap_range(5, 0, 10, 0, 50)
 
         # b will be set to 975
-        b = rc_utils.remap_range(5, 0, 20, 1000, 900)
+        b = uav_utils.remap_range(5, 0, 20, 1000, 900)
 
         # c will be set to 30
-        c = rc_utils.remap_range(2, 0, 1, -10, 10)
+        c = uav_utils.remap_range(2, 0, 1, -10, 10)
 
         # d will be set to 10
-        d = rc_utils.remap_range(2, 0, 1, -10, 10, True)
+        d = uav_utils.remap_range(2, 0, 1, -10, 10, True)
     """
     old_span: float = old_max - old_min
     new_span: float = new_max - new_min
@@ -215,11 +216,11 @@ def crop(
 
     Example::
 
-        image = rc.camera.get_color_image()
+        image = uav.camera.get_color_image()
 
         # Crop the image to only keep the top half
-        cropped_image = rc_utils.crop(
-            image, (0, 0), (rc.camera.get_height() // 2, rc.camera.get_width())
+        cropped_image = uav_utils.crop(
+            image, (0, 0), (uav.camera.get_height() // 2, uav.camera.get_width())
         )
     """
     assert (
@@ -261,13 +262,13 @@ def stack_images_horizontal(
 
     Example::
 
-        color_image = rc.camera.get_color_image()
+        color_image = uav.camera.get_color_image()
 
-        depth_image = rc.camera.get_depth_image()
-        depth_image_colormap = rc_utils.colormap_depth_image(depth_image)
+        depth_image = uav.camera.get_depth_image()
+        depth_image_colormap = uav_utils.colormap_depth_image(depth_image)
 
         # Create a new image with the color on the left and depth on the right
-        new_image = rc_utils.stack_images_horizontally(color_image, depth_image_colormap)
+        new_image = uav_utils.stack_images_horizontally(color_image, depth_image_colormap)
     """
     assert (
         image_0.shape[0] == image_1.shape[0]
@@ -295,13 +296,13 @@ def stack_images_vertical(
 
     Example::
 
-        color_image = rc.camera.get_color_image()
+        color_image = uav.camera.get_color_image()
 
-        depth_image = rc.camera.get_depth_image()
-        depth_image_colormap = rc_utils.colormap_depth_image(depth_image)
+        depth_image = uav.camera.get_depth_image()
+        depth_image_colormap = uav_utils.colormap_depth_image(depth_image)
 
         # Create a new image with the color on the top and depth on the bottom
-        new_image = rc_utils.stack_images_vertically(color_image, depth_image_colormap)
+        new_image = uav_utils.stack_images_vertically(color_image, depth_image_colormap)
     """
     assert (
         image_0.shape[1] == image_1.shape[1]
@@ -367,8 +368,8 @@ def find_contours(
         BLUE_HSV_MAX = (110, 255, 255)
 
         # Extract contours around all blue portions of the current image
-        contours = rc_utils.find_contours(
-            rc.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
+        contours = uav_utils.find_contours(
+            uav.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
         )
     """
     assert (
@@ -432,12 +433,12 @@ def get_largest_contour(
         # Extract the blue contours
         BLUE_HSV_MIN = (90, 50, 50)
         BLUE_HSV_MAX = (110, 255, 255)
-        contours = rc_utils.find_contours(
-            rc.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
+        contours = uav_utils.find_contours(
+            uav.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
         )
 
         # Find the largest contour
-        largest_contour = rc_utils.get_largest_contour(contours)
+        largest_contour = uav_utils.get_largest_contour(contours)
     """
     # Check that the list contains at least one contour
     if len(contours) == 0:
@@ -467,13 +468,13 @@ def draw_contour(
 
     Example::
 
-        image = rc.camera.get_color_image()
+        image = uav.camera.get_color_image()
 
         # Extract the largest blue contour
         BLUE_HSV_MIN = (90, 50, 50)
         BLUE_HSV_MAX = (110, 255, 255)
-        contours = rc_utils.find_contours(image, BLUE_HSV_MIN, BLUE_HSV_MAX)
-        largest_contour = rc_utils.get_largest_contour(contours)
+        contours = uav_utils.find_contours(image, BLUE_HSV_MIN, BLUE_HSV_MAX)
+        largest_contour = uav_utils.get_largest_contour(contours)
 
         # Draw this contour onto image
         if (largest_contour is not None):
@@ -505,18 +506,18 @@ def draw_circle(
 
     Example::
 
-        image = rc.camera.get_color_image()
+        image = uav.camera.get_color_image()
 
         # Extract the largest blue contour
         BLUE_HSV_MIN = (90, 50, 50)
         BLUE_HSV_MAX = (110, 255, 255)
-        contours = rc_utils.find_contours(image, BLUE_HSV_MIN, BLUE_HSV_MAX)
-        largest_contour = rc_utils.get_largest_contour(contours)
+        contours = uav_utils.find_contours(image, BLUE_HSV_MIN, BLUE_HSV_MAX)
+        largest_contour = uav_utils.get_largest_contour(contours)
 
         # Draw a dot at the center of this contour in red
         if (largest_contour is not None):
             center = get_contour_center(contour)
-            draw_circle(image, center, rc_utils.ColorBGR.red.value)
+            draw_circle(image, center, uav_utils.ColorBGR.red.value)
     """
     for channel in color:
         assert (
@@ -551,14 +552,14 @@ def get_contour_center(contour: NDArray) -> Optional[tuple[int, int]]:
         # Extract the largest blue contour
         BLUE_HSV_MIN = (90, 50, 50)
         BLUE_HSV_MAX = (110, 255, 255)
-        contours = rc_utils.find_contours(
-            rc.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
+        contours = uav_utils.find_contours(
+            uav.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
         )
-        largest_contour = rc_utils.get_largest_contour(contours)
+        largest_contour = uav_utils.get_largest_contour(contours)
 
         # Find the center of this contour if it exists
         if (largest_contour is not None):
-            center = rc_utils.get_contour_center(largest_contour)
+            center = uav_utils.get_contour_center(largest_contour)
     """
     M = cv.moments(contour)
 
@@ -588,13 +589,13 @@ def get_contour_area(contour: NDArray) -> float:
         # Extract the largest blue contour
         BLUE_HSV_MIN = (90, 50, 50)
         BLUE_HSV_MAX = (110, 255, 255)
-        contours = rc_utils.find_contours(
-            rc.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
+        contours = uav_utils.find_contours(
+            uav.camera.get_color_image(), BLUE_HSV_MIN, BLUE_HSV_MAX
         )
-        largest_contour = rc_utils.get_largest_contour(contours)
+        largest_contour = uav_utils.get_largest_contour(contours)
 
         # Find the area of this contour (will evaluate to 0 if no contour was found)
-        area = rc_utils.get_contour_area(contour)
+        area = uav_utils.get_contour_area(contour)
     """
     return cv.contourArea(contour)
 
@@ -620,10 +621,10 @@ def pixelate_image(
 
         # Load and pixelate a black-and-white image
         img = cv.imread('./frames/bad_apple_080.png', cv.IMREAD_GRAYSCALE)
-        pixelated = rc_utils.pixelate_image(img)
+        pixelated = uav_utils.pixelate_image(img)
 
         # Display the image on the dot matrix
-        rc.display.set_matrix(pixelated)
+        uav.display.set_matrix(pixelated)
     """
     w, h = size
     return cv.resize(img, (w, h), interpolation=cv.INTER_LINEAR)
@@ -658,10 +659,10 @@ def get_depth_image_center_distance(
 
     Example::
 
-        depth_image = rc.camera.get_depth_image()
+        depth_image = uav.camera.get_depth_image()
 
         # Find the distance of the object (in cm) the center of depth_image
-        center_distance = rc_utils.get_depth_image_center_distance(depth_image)
+        center_distance = uav_utils.get_depth_image_center_distance(depth_image)
     """
     assert (
         kernel_size > 0 and kernel_size % 2 == 1
@@ -700,10 +701,10 @@ def get_pixel_average_distance(
 
     Example::
 
-        depth_image = rc.camera.get_depth_image()
+        depth_image = uav.camera.get_depth_image()
 
         # Find the distance of the object (in cm) at the pixel (100, 20) of depth_image
-        average_distance = rc_utils.get_average_distance(depth_image, 100, 20)
+        average_distance = uav_utils.get_average_distance(depth_image, 100, 20)
     """
     (pix_row, pix_col) = pix_coord
     assert (
@@ -772,15 +773,15 @@ def get_closest_pixel(
 
     Example::
 
-        depth_image = rc.camera.get_depth_image()
+        depth_image = uav.camera.get_depth_image()
 
         # Crop off the ground directly in front of the car
-        cropped_image = rc_utils.crop(
-            image, (0, 0), (int(rc.camera.get_height() * 0.66), rc.camera.get_width())
+        cropped_image = uav_utils.crop(
+            image, (0, 0), (int(uav.camera.get_height() * 0.66), uav.camera.get_width())
         )
 
         # Find the closest pixel
-        closest_pixel = rc_utils.get_closest_pixel(depth_image)
+        closest_pixel = uav_utils.get_closest_pixel(depth_image)
     """
     assert (
         kernel_size > 0 and kernel_size % 2 == 1
@@ -822,10 +823,10 @@ def colormap_depth_image(
     Example::
 
         # retrieve a depth image
-        depth_image = rc.camera.get_depth_image()
+        depth_image = uav.camera.get_depth_image()
 
         # get the colormapped depth image
-        depth_image_colormap = rc_utils.colormap_depth_image(depth_image)
+        depth_image_colormap = uav_utils.colormap_depth_image(depth_image)
     """
     # Clip anything above max_depth
     np.clip(depth_image, None, max_depth, depth_image)
@@ -836,153 +837,6 @@ def colormap_depth_image(
     return cv.applyColorMap(
         -cv.convertScaleAbs(depth_image, alpha=255 / max_depth), cv.COLORMAP_INFERNO
     )
-
-
-########################################################################################
-# LIDAR
-########################################################################################
-
-
-def get_lidar_closest_point(
-    scan: NDArray[Any, np.float32],
-    window: tuple[float, float] = (0, 360)
-) -> tuple[float, float]:
-    """
-    Finds the closest point from a LIDAR scan.
-
-    Args:
-        scan: The samples from a LIDAR scan.
-        window: The degree range to consider, expressed as (min_degree, max_degree)
-
-    Returns:
-        The (angle, distance) of the point closest to the car within the specified
-        degree window. All angles are in degrees, starting at 0 directly in front of the
-        car and increasing clockwise. Distance is in cm.
-
-    Warning:
-        In areas with glass, mirrors, or large open spaces, there is a high
-        likelihood of distance error.
-
-    Note:
-        Ignores any samples with a value of 0.0 (no data).
-
-        In order to define a window which passes through the 360-0 degree boundary, it
-        is acceptable for window min_degree to be larger than window max_degree.  For
-        example, (350, 10) is a 20 degree window in front of the car.
-
-    Example::
-
-        scan = rc.lidar.get_samples()
-
-        # Find the angle and distance of the closest point
-        angle, distance = rc_utils.get_lidar_closest_point(scan)
-
-        # Find the closest distance in the 90 degree window behind the car
-        _, back_distance = rc_utils.get_lidar_closest_point(scan, (135, 225))
-
-        # Find the closest distance in the 90 degree window in front of the car
-        _, front_distance = rc_utils.get_lidar_closest_point(scan, (315, 45))
-    """
-    # Adjust window angles into the 0 to 360 degree range
-    min_angle = window[0] % 360
-    max_angle = window[1] % 360
-
-    # If min_angle and max_angle are the same, use the entire scan
-    if min_angle == max_angle:
-        samples = (scan - 0.01) % 1000000
-        min_index = np.argmin(samples)
-        return min_index * 360 / scan.shape[0], samples[min_index]
-
-    # Find the indices of the first and last sample in window
-    first_sample: int = round(min_angle * len(scan) / 360)
-    last_sample: int = round(max_angle * len(scan) / 360) + 1
-
-    # If we pass the 0-360 boundary, we must consider the scan in two pieces
-    if first_sample > last_sample:
-        left_samples = scan[first_sample:]
-        right_samples = scan[: last_sample + 1]
-
-        # Turn 0.0 (no data) into a very large number so it is ignored
-        left_samples = (left_samples - 0.01) % 1000000
-        right_samples = (right_samples - 0.01) % 1000000
-
-        # Find index and value of min value in each piece
-        left_min_index = np.argmin(left_samples)
-        left_min = left_samples[left_min_index]
-        right_min_index = np.argmin(right_samples)
-        right_min = right_samples[right_min_index]
-
-        # Return the degree and angle of the smaller value
-        if left_min < right_min:
-            return (first_sample + left_min_index) * 360 / scan.shape[0], left_min
-        else:
-            return right_min_index * 360 / scan.shape[0], right_min
-
-    # Otherwise, use the same approach but for one continuous piece
-    samples = (scan[first_sample : last_sample + 1] - 0.01) % 1000000
-    min_index = np.argmin(samples)
-    return (first_sample + min_index) * 360 / scan.shape[0], samples[min_index]
-
-
-def get_lidar_average_distance(
-    scan: NDArray[Any, np.float32],
-    angle: float,
-    window_angle: float = 4
-) -> float:
-    """
-    Finds the average distance of the object at a particular angle relative to the car.
-
-    Args:
-        scan: The samples from a LIDAR scan
-        angle: The angle (in degrees) at which to measure distance, starting at 0
-            directly in front of the car and increasing clockwise.
-        window_angle: The number of degrees to consider around angle.
-
-    Returns:
-        The average distance of the points at angle in cm.
-
-    Note:
-        Ignores any samples with a value of 0.0 (no data).
-        Increasing window_angle reduces noise at the cost of reduced accuracy.
-
-    Example::
-
-        scan = rc.lidar.get_samples()
-
-        # Find the distance directly behind the car (6:00 position)
-        back_distance = rc_utils.get_lidar_average_distance(scan, 180)
-
-        # Find the distance to the forward and right of the car (1:30 position)
-        forward_right_distance = rc_utils.get_lidar_average_distance(scan, 45)
-    """
-    assert (
-        0 <= window_angle < 360
-    ), f"window_angle ({window_angle}) must be in the range 0 to 360, and reasonably should not exceed 20."
-
-    # Adjust angle into the 0 to 360 degree range
-    angle %= 360
-
-    # Calculate the indices at the edges of the requested window
-    center_index: int = int(angle * scan.shape[0] / 360)
-    num_side_samples: int = int(window_angle / 2 * scan.shape[0] / 360)
-    left_index: int = (center_index - num_side_samples) % len(scan)
-    right_index: int = (center_index + num_side_samples) % len(scan)
-
-    # Select samples in the window, handling if we cross the edge of the array
-    samples: list[float]
-    if right_index < left_index:
-        samples = scan[left_index:].tolist() + scan[0 : right_index + 1].tolist()
-    else:
-        samples = scan[left_index : right_index + 1].tolist()
-
-    # Remove samples with no data (0.0)
-    samples = [elem for elem in samples if elem > 0]
-
-    # If no valid samples remain, return 0.0
-    if len(samples) == 0:
-        return 0.0
-
-    return sum(samples) / len(samples)
 
 
 ########################################################################################
@@ -1068,8 +922,8 @@ class ARMarker:
             RED = ((170, 100, 100), (10, 255, 255), "red")
 
             # Detect the AR markers in the current color image
-            image = rc.camera.get_color_image()
-            markers = rc_utils.get_ar_markers(image)
+            image = uav.camera.get_color_image()
+            markers = uav_utils.get_ar_markers(image)
 
             # Search for the colors RED and BLUE in all of the detected markers
             for marker in markers:
@@ -1173,7 +1027,7 @@ def get_ar_markers(
             for 6x6 markers.
 
     Warning:
-        By default, this function looks for 6x6 AR markers which are used in the racecar sim.
+        By default, this function looks for 6x6 AR markers which are used in the UAV Neo sim.
         To track the 5x5 markers used in-person, pass `cv.aruco.DICT_5X5_250` to `type`.
 
     Returns:
@@ -1182,11 +1036,11 @@ def get_ar_markers(
     Example::
 
         # Detect 6x6 ArUco markers in the current color image.
-        image = rc.camera.get_color_image()
-        markers = racecar_utils.get_ar_markers(image)
+        image = uav.camera.get_color_image()
+        markers = drone_utils.get_ar_markers(image)
 
         # Or, detect 5x5 markers instead:
-        markers = racecar_utils.get_ar_markers(image, marker_type=cv.aruco.DICT_5X5_250)
+        markers = drone_utils.get_ar_markers(image, marker_type=cv.aruco.DICT_5X5_250)
 
         # Print information detected for the zeroth marker
         if len(markers) >= 1:
@@ -1234,18 +1088,18 @@ def draw_ar_markers(
 
     Warning:
         This modifies the provided image. If you accessed the image with
-        rc.camera.get_color_image_no_copy(), you must manually create a copy of the
+        uav.camera.get_color_image_no_copy(), you must manually create a copy of the
         image first with copy.deepcopy().
 
     Example::
 
         # Detect the AR markers in the current color image
-        image = rc.camera.get_color_image()
-        markers = rc_utils.get_ar_markers(image)
+        image = uav.camera.get_color_image()
+        markers = uav_utils.get_ar_markers(image)
 
         # Draw the detected markers on the image and display it
-        rc_utils.draw_ar_markers(image, markers)
-        rc.display.show_color_image(color_image)
+        uav_utils.draw_ar_markers(image, markers)
+        uav.display.show_color_image(color_image)
     """
     ids = np.zeros((len(markers), 1), np.int32)
     corners = []

@@ -2,11 +2,10 @@
 Copyright MIT
 MIT License
 
-BWSI Autonomous RACECAR Course
-Racecar Neo LTS
+UAV Neo Drone Course
 
 File Name: controller.py
-File Description: Defines the interface of the Controller module of the racecar_core library.
+File Description: Defines the interface of the Controller module of the drone_core library.
 """
 
 import abc
@@ -69,7 +68,7 @@ class Controller(abc.ABC):
             # the A button is held down.  Thus, multiple messages will be printed
             # if we press and hold the A button
             def update():
-                if rc.controller.is_down(rc.controller.Button.A):
+                if uav.controller.is_down(uav.controller.Button.A):
                     print("The A button is currently pressed.")
         """
         pass
@@ -94,7 +93,7 @@ class Controller(abc.ABC):
             # This update function will print a single message each time the A
             # button is pressed on the controller
             def update():
-                if rc.controller.was_pressed(rc.controller.Button.A):
+                if uav.controller.was_pressed(uav.controller.Button.A):
                     print("The A button was pressed")
         """
         pass
@@ -119,7 +118,7 @@ class Controller(abc.ABC):
             # This update function will print a single message each time the A
             # button is released on the controller
             def update():
-                if rc.controller.was_released(rc.controller.Button.A):
+                if uav.controller.was_released(uav.controller.Button.A):
                     print("The A button was released")
         """
         pass
@@ -143,7 +142,7 @@ class Controller(abc.ABC):
 
             # Speed will receive a value from 0.0 to 1.0 based on how much the left
             # trigger is pressed
-            speed = rc.controller.get_trigger(rc.controller.Trigger.LEFT)
+            speed = uav.controller.get_trigger(uav.controller.Trigger.LEFT)
         """
         pass
 
@@ -167,6 +166,6 @@ class Controller(abc.ABC):
 
             # x and y will be given values from -1.0 to 1.0 based on the position of
             # the left joystick
-            (x, y) = rc.controller.get_joystick(rc.controller.Joystick.LEFT)
+            (x, y) = uav.controller.get_joystick(uav.controller.Joystick.LEFT)
         """
         pass

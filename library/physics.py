@@ -10,7 +10,8 @@ File Description: Defines the interface of the Physics module of the drone_core 
 
 import abc
 import numpy as np
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 
 
 class Physics(abc.ABC):
@@ -31,7 +32,7 @@ class Physics(abc.ABC):
 
         Example::
 
-            accel = rc.physics.get_linear_acceleration()
+            accel = uav.physics.get_linear_acceleration()
             forward_accel = accel[2]
         """
         pass
@@ -49,7 +50,7 @@ class Physics(abc.ABC):
 
         Example::
 
-            vel = rc.physics.get_linear_velocity()
+            vel = uav.physics.get_linear_velocity()
             forward_speed = vel[2]
         """
         pass
@@ -68,7 +69,7 @@ class Physics(abc.ABC):
 
         Example::
 
-            ang_vel = rc.physics.get_angular_velocity()
+            ang_vel = uav.physics.get_angular_velocity()
             yaw_rate = ang_vel[1]
         """
         pass
@@ -83,7 +84,7 @@ class Physics(abc.ABC):
 
         Example::
 
-            alt = rc.physics.get_altitude()
+            alt = uav.physics.get_altitude()
             if alt < 2.0:
                 print("Low altitude warning")
         """
@@ -102,7 +103,7 @@ class Physics(abc.ABC):
 
         Example::
 
-            attitude = rc.physics.get_attitude()
+            attitude = uav.physics.get_attitude()
             pitch, roll, yaw = attitude[0], attitude[1], attitude[2]
         """
         pass
@@ -119,7 +120,7 @@ class Physics(abc.ABC):
 
         Example::
 
-            gps = rc.physics.get_gps()
+            gps = uav.physics.get_gps()
             lat, lon, alt_msl = gps[0], gps[1], gps[2]
         """
         pass

@@ -4,7 +4,8 @@ Camera simulation module — requests images from the UAVNeo Simulator via UDP.
 
 import numpy as np
 import cv2 as cv
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 
 from camera import Camera
 

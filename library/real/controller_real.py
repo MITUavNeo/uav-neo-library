@@ -54,12 +54,10 @@ class ControllerReal(Controller):
     # The indices of the (x, y) joystick axes in message.axes
     __JOYSTICK_MAP = [(0, 1), (3, 4)]
 
-    def __init__(self, racecar):
-        self.__racecar = racecar
-        # print(f"Length of self.Button: {len(self.Button)}")
+    def __init__(self, drone):
+        self.__drone = drone
         # Button state at the start of last frame
         self.__was_down = [False] * len(self.Button)
-        # print(f"Length of __was_down: {len(self.__was_down)}")
         # Button state at the start of this frame
         self.__is_down = [False] * len(self.Button)
         # Button state received since the start of this frame
@@ -100,16 +98,12 @@ class ControllerReal(Controller):
     def get_trigger(self, trigger: Controller.Trigger) -> float:
         return self.__last_trigger[trigger.value]
 
-    def get_joystick(self, joystick: Controller.Joystick) -> tuple[float, float]:
+    def get_joystick(self, joystick: Controller.Joystick) -> tuple:
         return self.__last_joystick[joystick.value]
 
     def __controller_callback(self, message):
         """
         Updates the state of Controller in response to a change in controller state.
-
-        Args:
-            message: (ROS controller message object) An object encoding the
-                physical state of the controller.
         """
         for i in range(0, len(self.__BUTTON_MAP)):
             self.__cur_down[i] = bool(message.buttons[self.__BUTTON_MAP[i]])
@@ -130,18 +124,18 @@ class ControllerReal(Controller):
             self.__cur_start = start
             if start:
                 if self.__cur_back:
-                    self.__racecar._RacecarReal__handle_exit()
+                    self.__drone._DroneReal__handle_exit()
                 else:
-                    self.__racecar._RacecarReal__handle_start()
+                    self.__drone._DroneReal__handle_start()
 
         back = message.buttons[self.__BACK_MAP]
         if back != self.__cur_back:
             self.__cur_back = back
             if back:
                 if self.__cur_start:
-                    self.__racecar._RacecarReal__handle_exit()
+                    self.__drone._DroneReal__handle_exit()
                 else:
-                    self.__racecar._RacecarReal__handle_back()
+                    self.__drone._DroneReal__handle_back()
 
     def __update(self):
         """
@@ -155,22 +149,15 @@ class ControllerReal(Controller):
     def __convert_trigger_value(self, value: float) -> float:
         """
         Converts a received trigger value into the desired range.
-
-        Args:
-            value: The value of the trigger provided in the ROS message.
         """
         value = (1.0 - value) / 2
         if value < self.__TRIGGER_DEAD_ZONE:
             return 0
         return value
 
-    def __convert_joystick_values(self, x: float, y: float) -> tuple[float, float]:
+    def __convert_joystick_values(self, x: float, y: float) -> tuple:
         """
         Converts a received joystick axis value into the desired range.
-
-        Args:
-            x: The value of the joystick x-axis provided in the ROS message.
-            y: The value of the joystick y-axis provided in the ROS message.
         """
         x = -x
 
