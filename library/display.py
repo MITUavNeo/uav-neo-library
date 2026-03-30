@@ -1,8 +1,8 @@
 """
 Copyright MIT
-MIT License
+GNU General Public License v3.0
 
-UAV Neo Drone Course
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
 
 File Name: display.py
 File Description: Defines the interface of the Display module of the drone_core library.
@@ -11,9 +11,10 @@ File Description: Defines the interface of the Display module of the drone_core 
 import abc
 import numpy as np
 from typing import Any
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 
-import drone_utils as rc_utils
+import drone_utils as uav_utils
 
 
 class Display(abc.ABC):
@@ -44,8 +45,8 @@ class Display(abc.ABC):
 
         Example::
 
-            image = rc.camera.get_color_image()
-            rc.display.show_color_image(image)
+            image = uav.camera.get_color_image()
+            uav.display.show_color_image(image)
         """
         pass
 
@@ -65,8 +66,8 @@ class Display(abc.ABC):
 
         Example::
 
-            depth_image = rc.camera.get_depth_image()
-            rc.display.show_depth_image(depth_image)
+            depth_image = uav.camera.get_depth_image()
+            uav.display.show_depth_image(depth_image)
         """
         if self.__isHeadless:
             return
@@ -77,19 +78,19 @@ class Display(abc.ABC):
                 0 <= point[0] < image.shape[0] and 0 <= point[1] < image.shape[1]
             ), f"The point [{point}] is not a valid pixel row and column within image."
 
-        color_image = rc_utils.colormap_depth_image(image, max_depth)
+        color_image = uav_utils.colormap_depth_image(image, max_depth)
 
         for point in points:
-            rc_utils.draw_circle(
+            uav_utils.draw_circle(
                 color_image,
                 point,
-                rc_utils.ColorBGR.green.value,
+                uav_utils.ColorBGR.green.value,
                 radius=self.__BIG_DOT_RADIUS,
             )
-            rc_utils.draw_circle(
+            uav_utils.draw_circle(
                 color_image,
                 point,
-                rc_utils.ColorBGR.blue.value,
+                uav_utils.ColorBGR.blue.value,
                 radius=self.__SMALL_DOT_RADIUS,
             )
 
@@ -106,7 +107,7 @@ class Display(abc.ABC):
         Example::
 
             dot_matrix = np.ones((8, 24), dtype=np.uint8)
-            rc.display.set_matrix(dot_matrix)
+            uav.display.set_matrix(dot_matrix)
         """
         pass
 
@@ -125,7 +126,7 @@ class Display(abc.ABC):
 
         Example::
 
-            rc.display.show_text("Hello, Drone!")
+            uav.display.show_text("Hello, Drone!")
         """
         pass
 
@@ -152,6 +153,6 @@ class Display(abc.ABC):
 
         Example::
 
-            rc.display.set_matrix_intensity(0.5)
+            uav.display.set_matrix_intensity(0.5)
         """
         pass

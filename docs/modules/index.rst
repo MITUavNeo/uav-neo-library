@@ -7,10 +7,10 @@ Modules
    core
    camera
    controller
+   detector
    display
-   drive
    flight
-   lidar
    physics
+   state
    telemetry
    utils

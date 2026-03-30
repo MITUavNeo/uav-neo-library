@@ -1,8 +1,8 @@
 """
 Copyright MIT
-MIT License
+GNU General Public License v3.0
 
-UAV Neo Drone Course
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
 
 File Name: camera.py
 File Description: Defines the interface of the Camera module of the drone_core library.
@@ -11,7 +11,8 @@ File Description: Defines the interface of the Camera module of the drone_core l
 import abc
 import copy
 import numpy as np
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 
 
 class Camera(abc.ABC):
@@ -41,7 +42,7 @@ class Camera(abc.ABC):
 
         Example::
 
-            image = rc.camera.get_color_image()
+            image = uav.camera.get_color_image()
             blue = image[3][5][0]
         """
         return copy.deepcopy(self.get_color_image_no_copy())
@@ -59,7 +60,7 @@ class Camera(abc.ABC):
 
         Example::
 
-            image = rc.camera.get_color_image_no_copy()
+            image = uav.camera.get_color_image_no_copy()
         """
         pass
 
@@ -85,7 +86,7 @@ class Camera(abc.ABC):
 
         Example::
 
-            image = rc.camera.get_depth_image()
+            image = uav.camera.get_depth_image()
             distance = image[3][5]
         """
         pass
@@ -114,7 +115,7 @@ class Camera(abc.ABC):
 
         Example::
 
-            down_image = rc.camera.get_downward_image()
+            down_image = uav.camera.get_downward_image()
         """
         pass
 
