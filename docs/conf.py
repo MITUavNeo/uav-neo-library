@@ -35,6 +35,5 @@ pygments_style_dark = 'lightbulb'
 
 # -- Options for HTML output -------------------------------------------------
 
-html_permalinks_icon = '<span>#</span>'
-html_theme = 'sphinxawesome_theme'
+html_theme = 'furo'
 html_static_path = ['_static']
