@@ -1,9 +1,11 @@
 """
-Copyright MIT and Harvey Mudd College
-MIT License
-Summer 2020
+Copyright MIT
+GNU General Public License v3.0
 
-Manages communication with the UAVNeo Simulator.
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: drone_core_sim.py
+File Description: Manages communication with the UAVNeo Simulator.
 """
 
 import struct

@@ -1,5 +1,11 @@
 """
-Controller simulation module — queries controller input from the UAVNeo Simulator via UDP.
+Copyright MIT
+GNU General Public License v3.0
+
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: controller_sim.py
+File Description: Controller simulation module — queries controller input from the UAVNeo Simulator via UDP.
 """
 
 import sys

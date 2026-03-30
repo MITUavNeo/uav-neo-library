@@ -1,5 +1,11 @@
 """
-Physics simulation module — queries sensor data from the UAVNeo Simulator via UDP.
+Copyright MIT
+GNU General Public License v3.0
+
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: physics_sim.py
+File Description: Physics simulation module — queries sensor data from the UAVNeo Simulator via UDP.
 """
 
 import struct

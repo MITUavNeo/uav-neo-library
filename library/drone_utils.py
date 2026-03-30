@@ -1,8 +1,8 @@
 """
 Copyright MIT
-MIT License
+GNU General Public License v3.0
 
-UAV Neo Drone Course
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
 
 File Name: drone_utils.py
 File Description: Contains helper functions to support common operations.
