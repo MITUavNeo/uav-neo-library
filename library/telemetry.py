@@ -1,12 +1,11 @@
 """
 Copyright MIT
-MIT License
+GNU General Public License v3.0
 
-BWSI Autonomous RACECAR Course
-Racecar Neo LTS
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
 
 File Name: telemetry.py
-File Description: Defines the interface of the Telemetry module of the racecar_core library
+File Description: Defines the interface of the Telemetry module of the drone_core library
 """
 
 import abc
@@ -32,10 +31,10 @@ class Telemetry(abc.ABC):
         Example::
 
             # Declare variables to be recorded
-            rc.telemetry.declare_variables("speed", "angle")
+            uav.telemetry.declare_variables("speed", "angle")
 
             # Push a data point containing a speed and angle value to the telemetry
-            rc.telemetry.record(1, 0.5)
+            uav.telemetry.record(1, 0.5)
         """
         pass
 
@@ -54,10 +53,10 @@ class Telemetry(abc.ABC):
         Example::
 
             # Declare variables to be recorded
-            rc.telemetry.declare_variables("speed", "angle")
+            uav.telemetry.declare_variables("speed", "angle")
 
             # Push a data point containing a speed and angle value to the telemetry
-            rc.telemetry.record(1, 0.5)
+            uav.telemetry.record(1, 0.5)
         """
         pass
 

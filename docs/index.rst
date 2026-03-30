@@ -7,14 +7,13 @@ UAV Neo library documentation
 
 This is the documentation for the UAV Neo python library used in the BWSI UAV Neo Drone course.
 
-For API documentation, check out **Modules**. Go to **Guides** for miscellaneous guides on advanced drone operations.
+For API documentation, check out **Modules**.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    modules/index
-   guides/index
 
 |
 

@@ -1,9 +1,11 @@
 """
-Copyright MIT and Harvey Mudd College
-MIT License
-Summer 2020
+Copyright MIT
+GNU General Public License v3.0
 
-Manages communication with the UAVNeo Simulator.
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: drone_core_sim.py
+File Description: Manages communication with the UAVNeo Simulator.
 """
 
 import struct
@@ -22,16 +24,16 @@ import physics_sim
 import telemetry_sim
 
 from drone_core import Drone
-import drone_utils as rc_utils
+import drone_utils as uav_utils
 
 
 class DroneSim(Drone):
-    # Resolve the simulator IP: use RACECAR_SIM_IP env var if set,
+    # Resolve the simulator IP: use DRONE_SIM_IP env var if set,
     # otherwise auto-detect the WSL2 Windows host gateway, falling back to localhost.
     @staticmethod
     def __resolve_sim_ip() -> str:
         import os
-        env_ip = os.environ.get("RACECAR_SIM_IP")
+        env_ip = os.environ.get("DRONE_SIM_IP") or os.environ.get("RACECAR_SIM_IP")
         if env_ip:
             return env_ip
         # In WSL2 the Windows host is the default gateway (stored little-endian in /proc/net/route)
@@ -81,11 +83,7 @@ class DroneSim(Drone):
         controller_get_trigger = 19
         controller_get_joystick = 20
         display_show_image = 21
-        _reserved_22 = 22  # was drive_set_speed_angle
-        _reserved_23 = 23  # was drive_stop
-        _reserved_24 = 24  # was drive_set_max_speed
-        lidar_get_num_samples = 25   # Legacy: returns 0
-        lidar_get_samples = 26       # Legacy: returns empty
+        # 22-26 reserved (removed: drive and lidar)
         physics_get_linear_acceleration = 27
         physics_get_angular_velocity = 28
         flight_send_pcmd = 29
@@ -172,15 +170,15 @@ class DroneSim(Drone):
                 header = int(data[0])
                 if header == self.Header.connect.value:
                     drone_index = int(data[1])
-                    rc_utils.print_colored(
+                    uav_utils.print_colored(
                         f">> Connection established with UAVNeo Simulator (assigned to drone {drone_index}). Enter user program mode to begin...",
-                        rc_utils.TerminalColor.green,
+                        uav_utils.TerminalColor.green,
                     )
                     break
                 elif header == self.Header.error.value:
                     self.__handle_error(int(data[1]))
                 else:
-                    rc_utils.print_error(
+                    uav_utils.print_error(
                         ">> Invalid handshake with simulator, closing script..."
                     )
                     self.__send_header(self.Header.error)
@@ -213,7 +211,7 @@ class DroneSim(Drone):
                     self.__send_error(self.Error.python_exception)
                     raise
             elif header == self.Header.unity_exit.value:
-                rc_utils.print_warning(
+                uav_utils.print_warning(
                     ">> Exit command received from simulator, closing script..."
                 )
                 break
@@ -221,7 +219,7 @@ class DroneSim(Drone):
                 error = int(data[1]) if len(data) > 1 else self.Error.generic
                 self.__handle_error(error)
             else:
-                rc_utils.print_error(
+                uav_utils.print_error(
                     f">> Error: unexpected packet with header [{header}] received from simulator, closing script..."
                 )
                 self.__send_header(self.Header.error)
@@ -268,7 +266,7 @@ class DroneSim(Drone):
         is_async = not self.__in_call
         label = "async" if is_async else "sync"
 
-        rc_utils.print_warning(
+        uav_utils.print_warning(
             f">> CTRL-C (SIGINT) detected. Sending exit command to Unity ({label})..."
         )
         self.__send_header(self.Header.python_exit, is_async)
@@ -291,6 +289,6 @@ class DroneSim(Drone):
         elif error == self.Error.fragment_mismatch:
             text = "The simulator and Python became out of sync while sending a block message."
 
-        rc_utils.print_error(text)
+        uav_utils.print_error(text)
         print(">> Closing script...")
         exit(0)

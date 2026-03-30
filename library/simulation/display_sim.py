@@ -1,6 +1,17 @@
+"""
+Copyright MIT
+GNU General Public License v3.0
+
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: display_sim.py
+File Description: Contains the Display simulation module of the drone_core library.
+"""
+
 import numpy as np
 import cv2 as cv
-from nptyping import NDArray
+class NDArray:  # stub — no runtime dependency on nptyping
+    def __class_getitem__(cls, _): return cls
 from rich.live import Live
 from rich.table import Table
 from rich.console import Console

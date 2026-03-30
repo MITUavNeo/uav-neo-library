@@ -1,9 +1,9 @@
-Drive
+Flight
 ===============================================
 
 .. code-block:: python
 
-   drone.drive
+   drone.flight
 
-.. automodule:: drive
+.. automodule:: flight
    :members:

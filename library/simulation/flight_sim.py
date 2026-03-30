@@ -1,5 +1,11 @@
 """
-Flight simulation module — sends flight commands to the UAVNeo Simulator via UDP.
+Copyright MIT
+GNU General Public License v3.0
+
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: flight_sim.py
+File Description: Flight simulation module — sends flight commands to the UAVNeo Simulator via UDP.
 """
 
 import struct

@@ -1,8 +1,8 @@
 """
 Copyright MIT
-MIT License
+GNU General Public License v3.0
 
-UAV Neo Drone Course
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
 
 File Name: drone_core.py
 File Description: Contains the Drone class, the top level of the drone_core library.
@@ -14,12 +14,14 @@ from typing import Callable, Optional
 
 import camera
 import controller
+import detector
 import display
 import flight
 import physics
+import state
 import telemetry
 
-import drone_utils as rc_utils
+import drone_utils as uav_utils
 
 
 class Drone(abc.ABC):
@@ -31,9 +33,11 @@ class Drone(abc.ABC):
     def __init__(self) -> None:
         self.camera: camera.Camera
         self.controller: controller.Controller
+        self.detector: detector.Detector
         self.display: display.Display
         self.flight: flight.Flight
         self.physics: physics.Physics
+        self.state: state.State
         self.telemetry: telemetry.Telemetry
 
     @abc.abstractmethod
@@ -88,7 +92,7 @@ class Drone(abc.ABC):
 
         Example::
 
-            counter += rc.get_delta_time()
+            counter += uav.get_delta_time()
         """
         pass
 
@@ -102,7 +106,7 @@ class Drone(abc.ABC):
 
         Example::
 
-            rc.set_update_slow_time(2)
+            uav.set_update_slow_time(2)
         """
         pass
 
@@ -141,20 +145,20 @@ def create_drone(isSimulation: Optional[bool] = None) -> Drone:
 
         drone = DroneSim(is_headless)
     else:
-        rc_utils.print_error(
-            ">> Real drone mode is not yet available. Please use -s for simulation."
-        )
-        sys.exit(1)
+        sys.path.insert(1, library_path + "real")
+        from drone_core_real import DroneReal
+
+        drone = DroneReal(is_headless)
 
     if initialize_display:
         drone.display.create_window()
 
-    rc_utils.print_colored(
+    uav_utils.print_colored(
         ">> Drone created with the following options:"
         + f"\n    Simulation (-s): [{isSimulation}]"
         + f"\n    Headless (-h): [{is_headless}]"
         + f"\n    Initialize with display (-d): [{initialize_display}]",
-        rc_utils.TerminalColor.pink,
+        uav_utils.TerminalColor.pink,
     )
 
     return drone

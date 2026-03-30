@@ -1,3 +1,13 @@
+"""
+Copyright MIT
+GNU General Public License v3.0
+
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
+
+File Name: telemetry_sim.py
+File Description: Contains the Telemetry simulation module of the drone_core library.
+"""
+
 import time
 
 import pandas as pd

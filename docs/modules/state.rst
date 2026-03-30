@@ -1,9 +1,9 @@
-Lidar
+State
 ===============================================
 
 .. code-block:: python
 
-   drone.lidar
+   drone.state
 
-.. automodule:: lidar
+.. automodule:: state
    :members:

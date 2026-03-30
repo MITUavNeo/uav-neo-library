@@ -1,8 +1,8 @@
 """
 Copyright MIT
-MIT License
+GNU General Public License v3.0
 
-UAV Neo Drone Course
+MIT BWSI Autonomous Drone Racing Course - UAV Neo
 
 File Name: flight.py
 File Description: Defines the interface of the Flight module of the drone_core library.
@@ -14,6 +14,12 @@ import abc
 class Flight(abc.ABC):
     """
     Controls the drone's flight via piloting commands (pitch, roll, yaw, throttle).
+
+    Note:
+        All flight commands are sent to the mux node, which decides whether to
+        forward them to the flight controller based on the autonomy operator's
+        bumper state. The safety pilot always has override authority via the
+        RC transmitter.
     """
 
     @abc.abstractmethod
@@ -31,14 +37,16 @@ class Flight(abc.ABC):
 
         Note:
             All arguments are unitless ratios clamped to [-1.0, 1.0].
+            The actual speed scaling is controlled by the mux node configuration,
+            not by the student code.
 
         Example::
 
-            # Fly forward at half speed
-            rc.flight.send_pcmd(0.5, 0, 0, 0)
+            # Fly forward at half input
+            uav.flight.send_pcmd(0.5, 0, 0, 0)
 
             # Ascend while yawing right
-            rc.flight.send_pcmd(0, 0, 0.3, 0.5)
+            uav.flight.send_pcmd(0, 0, 0.3, 0.5)
         """
         pass
 
@@ -47,55 +55,43 @@ class Flight(abc.ABC):
         Zeros all flight inputs, bringing the drone to a hover.
 
         Note:
-            Equivalent to rc.flight.send_pcmd(0, 0, 0, 0).
+            Equivalent to uav.flight.send_pcmd(0, 0, 0, 0).
 
         Example::
 
             if counter > 5:
-                rc.flight.stop()
+                uav.flight.stop()
         """
         self.send_pcmd(0, 0, 0, 0)
 
     @abc.abstractmethod
-    def set_max_speed(self, max_speed: float = 0.25) -> None:
+    def takeoff(self) -> None:
         """
-        Sets the maximum speed multiplier for flight commands.
+        Sends ascending setpoints to the mux.
 
-        Args:
-            max_speed: A scale factor from 0.0 to 1.0 applied to all flight inputs.
+        Note:
+            The safety pilot must arm the motors and switch to OFFBOARD mode
+            on the RC transmitter before the drone will actually lift off.
+            This function only sets the velocity command — it does not arm
+            or change flight modes.
 
         Example::
 
-            rc.flight.set_max_speed(0.5)
+            uav.flight.takeoff()
         """
         pass
 
     @abc.abstractmethod
-    def takeoff(self) -> bool:
+    def land(self) -> None:
         """
-        Arms the motors and initiates an automatic launch sequence.
+        Sends descending setpoints to the mux.
 
-        Returns:
-            True if the drone is now armed and launching, False if already armed.
+        Note:
+            The safety pilot handles the actual landing mode switch on the
+            RC transmitter. This function only sets a downward velocity command.
 
         Example::
 
-            if rc.flight.takeoff():
-                print("Launching!")
-        """
-        pass
-
-    @abc.abstractmethod
-    def land(self) -> bool:
-        """
-        Initiates an automatic landing sequence.
-
-        Returns:
-            True if landing was initiated, False if not armed or already landing.
-
-        Example::
-
-            if rc.flight.land():
-                print("Landing initiated")
+            uav.flight.land()
         """
         pass
