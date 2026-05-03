@@ -68,7 +68,7 @@ class Drone(abc.ABC):
 
         Example::
 
-            rc = Drone()
+            drone = Drone()
 
             def start():
                 print("This function is called once")
@@ -76,8 +76,8 @@ class Drone(abc.ABC):
             def update():
                 print("This function is called every frame")
 
-            rc.set_start_update(start, update)
-            rc.go()
+            drone.set_start_update(start, update)
+            drone.go()
         """
         pass
 

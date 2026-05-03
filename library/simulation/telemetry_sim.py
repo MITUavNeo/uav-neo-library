@@ -12,16 +12,14 @@ import time
 
 import pandas as pd
 from matplotlib import pyplot as plt
-from telemetry import Telemetry
+from telemetry import Telemetry, _resolve_log_paths
 
 
 class TelemetrySim(Telemetry):
 
-    _LOG_FILE_NAME = "log.csv"
-    _PLOT_FILE_NAME = "log.png"
-
     def __init__(self) -> None:
         self.variable_names = None
+        self._LOG_FILE_NAME, self._PLOT_FILE_NAME = _resolve_log_paths()
         self.log_file = open(self._LOG_FILE_NAME, "w+")
         self.start_time = time.time()
 

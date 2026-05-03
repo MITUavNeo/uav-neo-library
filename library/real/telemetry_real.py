@@ -13,7 +13,7 @@ import time
 
 import pandas as pd
 from matplotlib import pyplot as plt
-from telemetry import Telemetry
+from telemetry import Telemetry, _resolve_log_paths
 
 # ROS2
 import rclpy as ros2
@@ -23,13 +23,12 @@ from diagnostic_msgs.msg import DiagnosticArray
 
 class TelemetryReal(Telemetry):
 
-    _LOG_FILE_NAME = "log.csv"
-    _PLOT_FILE_NAME = "log.png"
-
     def __init__(self):
         self.variable_names = None
         self.log_file = None
         self.start_time = None
+        self._LOG_FILE_NAME = None
+        self._PLOT_FILE_NAME = None
 
         # Diagnostics subscription
         self.node = ros2.create_node("telemetry_sub")
@@ -73,6 +72,7 @@ class TelemetryReal(Telemetry):
         if self.variable_names is None:
             self.variable_names = names
             self.start_time = time.time()
+            self._LOG_FILE_NAME, self._PLOT_FILE_NAME = _resolve_log_paths()
             self.log_file = open(self._LOG_FILE_NAME, "w+")
             header = ["time", *names]
             print(','.join(map(str, header)), file=self.log_file)
