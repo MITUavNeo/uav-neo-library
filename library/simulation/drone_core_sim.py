@@ -163,32 +163,45 @@ class DroneSim(Drone):
         raw_bytes = bytearray()
         fragment_size = total_bytes // num_fragments
         deadline = time.monotonic() + self._FRAME_TIMEOUT_S
+        received = 0
         for _ in range(num_fragments):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                self.__drain_socket()
-                return None
+                break
             chunk = self.__receive_data(fragment_size, timeout=remaining)
             if chunk is None:
-                # Fragment lost. Abort this frame, drain any stragglers from
-                # the OS buffer so the next request reads a clean stream, and
-                # let the caller fall back. The next update tick will retry.
-                self.__drain_socket()
-                return None
+                break
             raw_bytes += chunk
             self.__send_header(self.Header.python_send_next, is_async)
+            received += 1
+        if received < num_fragments:
+            # Fragment lost / timed out. The sim is mid-send and waiting on
+            # our remaining acks before it returns to idle. If we don't send
+            # them, the sim stays stuck *and* later delivers fragments that
+            # the next protocol call (e.g. get_delta_time) misreads as its
+            # own response. Send the remaining acks so the sim finishes its
+            # send loop, then drain everything it dumps back.
+            for _ in range(num_fragments - received):
+                self.__send_header(self.Header.python_send_next, is_async)
+            self.__drain_socket_quiet()
+            return None
         return bytes(raw_bytes)
 
-    def __drain_socket(self) -> None:
-        """Discard any buffered datagrams left from an aborted exchange."""
-        self.__socket.setblocking(False)
-        try:
-            while True:
+    def __drain_socket_quiet(self, quiet_window: float = 0.05) -> None:
+        """Drain until the socket has been silent for ``quiet_window`` seconds.
+
+        Bounded by ``_FRAME_TIMEOUT_S`` so a misbehaving sim can't stall us
+        indefinitely.
+        """
+        deadline = time.monotonic() + self._FRAME_TIMEOUT_S
+        while time.monotonic() < deadline:
+            ready, _, _ = select.select([self.__socket], [], [], quiet_window)
+            if not ready:
+                return
+            try:
                 self.__socket.recvfrom(65535)
-        except (BlockingIOError, OSError):
-            pass
-        finally:
-            self.__socket.setblocking(True)
+            except OSError:
+                return
 
     def __init__(self, isHeadless: bool = False) -> None:
         self.camera = camera_sim.CameraSim(self)
