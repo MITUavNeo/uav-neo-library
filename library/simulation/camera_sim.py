@@ -14,6 +14,7 @@ class NDArray:  # stub — no runtime dependency on nptyping
     def __class_getitem__(cls, _): return cls
 
 from camera import Camera
+import drone_utils as uav_utils
 
 
 class CameraSim(Camera):
@@ -61,7 +62,12 @@ class CameraSim(Camera):
         self.__is_depth_image_current = False
         self.__is_downward_image_current = False
 
-    def __request_color_image(self, isAsync: bool) -> NDArray[(480, 640), np.uint8]:
+    def __on_dropped_frame(self, kind: str) -> None:
+        uav_utils.print_warning(
+            f">> Dropped {kind} frame (UDP loss / sim timeout). Reusing last frame."
+        )
+
+    def __request_color_image(self, isAsync: bool) -> NDArray[(480, 640, 3), np.uint8]:
         self.__drone._DroneSim__send_header(
             self.__drone.Header.camera_get_color_image, isAsync
         )
@@ -69,6 +75,11 @@ class CameraSim(Camera):
         raw_bytes = self.__drone._DroneSim__receive_fragmented(
             32, self._WIDTH * self._HEIGHT * 4, isAsync
         )
+        if raw_bytes is None:
+            self.__on_dropped_frame("color")
+            if self.__color_image is not None:
+                return self.__color_image
+            return np.zeros((self._HEIGHT, self._WIDTH, 3), dtype=np.uint8)
         color_image = np.frombuffer(raw_bytes, dtype=np.uint8)
         color_image = np.reshape(color_image, (self._HEIGHT, self._WIDTH, 4), "C")
         color_image = cv.cvtColor(color_image, cv.COLOR_RGB2BGR)
@@ -78,9 +89,15 @@ class CameraSim(Camera):
         self.__drone._DroneSim__send_header(
             self.__drone.Header.camera_get_depth_image, isAsync
         )
-        raw_bytes: bytes = self.__drone._DroneSim__receive_data(
-            self._MAX_DEPTH_WIDTH * self._MAX_DEPTH_HEIGHT * 4
+        raw_bytes = self.__drone._DroneSim__receive_data(
+            self._MAX_DEPTH_WIDTH * self._MAX_DEPTH_HEIGHT * 4,
+            timeout=self.__drone._FRAME_TIMEOUT_S,
         )
+        if raw_bytes is None:
+            self.__on_dropped_frame("depth")
+            if self.__depth_image is not None:
+                return self.__depth_image
+            return np.zeros((self._HEIGHT, self._WIDTH), dtype=np.float32)
         depth_image = np.frombuffer(raw_bytes, dtype=np.float32)
 
         n: int = (len(depth_image) // 300).bit_length() // 2
@@ -101,6 +118,11 @@ class CameraSim(Camera):
         raw_bytes = self.__drone._DroneSim__receive_fragmented(
             32, self._WIDTH * self._HEIGHT * 4, isAsync
         )
+        if raw_bytes is None:
+            self.__on_dropped_frame("downward")
+            if self.__downward_image is not None:
+                return self.__downward_image
+            return np.zeros((self._HEIGHT, self._WIDTH, 3), dtype=np.uint8)
         downward_image = np.frombuffer(raw_bytes, dtype=np.uint8)
         downward_image = np.reshape(downward_image, (self._HEIGHT, self._WIDTH, 4), "C")
         downward_image = cv.cvtColor(downward_image, cv.COLOR_RGB2BGR)

@@ -10,6 +10,7 @@ import struct
 import socket
 import sys
 import select
+import time
 from enum import IntEnum
 from signal import signal, SIGINT
 from typing import Callable, Optional
@@ -139,19 +140,55 @@ class DroneSim(Drone):
         else:
             self.__socket.sendto(data, self.__UNITY_PORT)
 
-    def __receive_data(self, buffer_size: int = 8) -> bytes:
+    # Whole-frame deadline for fragmented reads. Must satisfy:
+    #   normal_frame_latency < _FRAME_TIMEOUT_S < sim_watchdog_timeout
+    # Picked so that a lost UDP fragment fails the current frame in time for
+    # python_finished to still reach the sim before its watchdog tears the
+    # session down.
+    _FRAME_TIMEOUT_S = 0.2
+
+    def __receive_data(
+        self, buffer_size: int = 8, timeout: Optional[float] = None
+    ) -> Optional[bytes]:
+        if timeout is not None:
+            ready, _, _ = select.select([self.__socket], [], [], timeout)
+            if not ready:
+                return None
         data, _ = self.__socket.recvfrom(buffer_size)
         return data
 
     def __receive_fragmented(
         self, num_fragments: int, total_bytes: int, is_async: bool = False
-    ) -> bytes:
-        raw_bytes: bytes = bytes()
+    ) -> Optional[bytes]:
+        raw_bytes = bytearray()
         fragment_size = total_bytes // num_fragments
-        for i in range(0, num_fragments):
-            raw_bytes += self.__receive_data(fragment_size)
+        deadline = time.monotonic() + self._FRAME_TIMEOUT_S
+        for _ in range(num_fragments):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                self.__drain_socket()
+                return None
+            chunk = self.__receive_data(fragment_size, timeout=remaining)
+            if chunk is None:
+                # Fragment lost. Abort this frame, drain any stragglers from
+                # the OS buffer so the next request reads a clean stream, and
+                # let the caller fall back. The next update tick will retry.
+                self.__drain_socket()
+                return None
+            raw_bytes += chunk
             self.__send_header(self.Header.python_send_next, is_async)
-        return raw_bytes
+        return bytes(raw_bytes)
+
+    def __drain_socket(self) -> None:
+        """Discard any buffered datagrams left from an aborted exchange."""
+        self.__socket.setblocking(False)
+        try:
+            while True:
+                self.__socket.recvfrom(65535)
+        except (BlockingIOError, OSError):
+            pass
+        finally:
+            self.__socket.setblocking(True)
 
     def __init__(self, isHeadless: bool = False) -> None:
         self.camera = camera_sim.CameraSim(self)
