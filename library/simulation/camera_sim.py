@@ -94,6 +94,9 @@ class CameraSim(Camera):
             timeout=self.__drone._FRAME_TIMEOUT_S,
         )
         if raw_bytes is None:
+            # Sim may yet deliver the datagram after our timeout; drain so the
+            # next protocol call doesn't read it as its own response.
+            self.__drone._DroneSim__drain_socket_quiet()
             self.__on_dropped_frame("depth")
             if self.__depth_image is not None:
                 return self.__depth_image
