@@ -124,3 +124,20 @@ class Physics(abc.ABC):
             lat, lon, alt_msl = gps[0], gps[1], gps[2]
         """
         pass
+
+    def get_position(self) -> NDArray[3, np.float32]:
+        """
+        Returns the drone's true world position (simulation only).
+
+        Returns:
+            A 3-element array (x_east, y_up, z_north) in meters.
+
+        Note:
+            Available in simulation only; the real drone has no ground-truth position.
+
+        Example::
+
+            pos = uav.physics.get_position()
+            forward = pos[2]
+        """
+        raise NotImplementedError("get_position is available in simulation only")

@@ -61,3 +61,10 @@ class PhysicsSim(Physics):
         )
         values = struct.unpack("fff", self.__drone._DroneSim__receive_data(12))
         return np.array(values, dtype=np.float32)
+
+    def get_position(self) -> NDArray[3, np.float32]:
+        self.__drone._DroneSim__send_header(
+            self.__drone.Header.physics_get_position
+        )
+        values = struct.unpack("fff", self.__drone._DroneSim__receive_data(12))
+        return np.array(values, dtype=np.float32)

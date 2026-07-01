@@ -114,6 +114,7 @@ class DroneSim(Drone):
         physics_get_gps = 36
         flight_takeoff = 37
         flight_land = 38
+        physics_get_position = 39
 
     class Error(IntEnum):
         """
