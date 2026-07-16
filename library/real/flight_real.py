@@ -51,11 +51,13 @@ class FlightReal(Flight):
             -1.0 <= throttle <= 1.0
         ), f"throttle [{throttle}] must be between -1.0 and 1.0 inclusive."
 
-        # Publish raw normalized values — the mux node applies max_speed scaling
+        # Publish raw normalized values — the mux node applies max_speed scaling.
+        # roll/yaw are negated: the cmd_vel frame is ENU (linear.y=left, angular.z=CCW),
+        # while send_pcmd is documented right-positive and clockwise-positive.
         self.__message.twist.linear.x = float(pitch)
-        self.__message.twist.linear.y = float(roll)
+        self.__message.twist.linear.y = float(-roll)
         self.__message.twist.linear.z = float(throttle)
-        self.__message.twist.angular.z = float(yaw)
+        self.__message.twist.angular.z = float(-yaw)
 
     def takeoff(self) -> None:
         """Send ascending setpoints. The safety pilot must arm and switch to
