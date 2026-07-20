@@ -19,6 +19,7 @@ import camera_sim
 import controller_sim
 import display_sim
 import flight_sim
+import led_sim
 import physics_sim
 import telemetry_sim
 
@@ -209,6 +210,7 @@ class DroneSim(Drone):
         self.controller = controller_sim.ControllerSim(self)
         self.display = display_sim.DisplaySim(isHeadless)
         self.flight = flight_sim.FlightSim(self)
+        self.led = led_sim.LedSim()
         self.physics = physics_sim.PhysicsSim(self)
         self.telemetry = telemetry_sim.TelemetrySim()
 
@@ -224,7 +226,9 @@ class DroneSim(Drone):
 
         signal(SIGINT, self.__handle_sigint)
 
-    def go(self) -> None:
+    def go(self, autostart: bool = False) -> None:
+        # autostart is accepted for parity with the real drone but ignored: the
+        # simulator starts user program mode on its own ENTER-key signal.
         print(">> Python script loaded, awaiting connection from UAVNeo Simulator.")
 
         # Repeatedly try to connect (async) until we receive a response

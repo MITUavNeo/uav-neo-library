@@ -17,6 +17,7 @@ import controller
 import detector
 import display
 import flight
+import led
 import physics
 import state
 import telemetry
@@ -36,14 +37,22 @@ class Drone(abc.ABC):
         self.detector: detector.Detector
         self.display: display.Display
         self.flight: flight.Flight
+        self.led: led.Led
         self.physics: physics.Physics
         self.state: state.State
         self.telemetry: telemetry.Telemetry
 
     @abc.abstractmethod
-    def go(self) -> None:
+    def go(self, autostart: bool = False) -> None:
         """
         Starts the drone, beginning in default mode.
+
+        Args:
+            autostart: If True, enter user program mode immediately instead of
+                waiting for the START button. Lets a program run without a game
+                controller (stop it with Ctrl-C). On the real drone the safety
+                pilot's OFFBOARD switch is still the gate for any motion. Ignored
+                by the simulator, which begins on its own ENTER-key signal.
 
         Note:
             go blocks execution until the program is exited.
