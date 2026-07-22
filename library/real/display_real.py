@@ -25,6 +25,12 @@ import threading
 import time
 
 
+# The MAX7219 matrix is off by default because the WS2812 LED strip (drone.led)
+# currently uses /dev/spidev0.0. Set True to enable a matrix (wire it to a free
+# SPI device and update the spi() call below).
+_MATRIX_PRESENT = False
+
+
 # Simple 5x7 font + 1 pixel padding (6 pixels wide total)
 # Each character is a list of 5 integers representing columns of 7 bits
 FONT = {
@@ -68,19 +74,23 @@ class DisplayReal(Display):
         else:
             print(f"Display {self.__DISPLAY} not found.")
 
-        # Create matrix device
-        try:
-            serial = spi(port=0, device=0, gpio=noop())
-            self.device = max7219(
-                serial,
-                cascaded=3,
-                block_orientation=-90,
-                rotate=0,
-                blocks_arranged_in_reverse_order=False
-            )
-            print("matrix display successfully initialized")
-        except Exception as e:
-            print(f"matrix display initialization failed. Reason: {e}")
+        # Off unless _MATRIX_PRESENT: the LED strip (drone.led) uses spidev0.0, so
+        # initializing a matrix on the same device would let two drivers fight over
+        # it. A matrix can be added later on a free SPI device.
+        self.device = None
+        if _MATRIX_PRESENT:
+            try:
+                serial = spi(port=0, device=0, gpio=noop())
+                self.device = max7219(
+                    serial,
+                    cascaded=3,
+                    block_orientation=-90,
+                    rotate=0,
+                    blocks_arranged_in_reverse_order=False
+                )
+                print("matrix display successfully initialized")
+            except Exception as e:
+                print(f"matrix display initialization failed. Reason: {e}")
 
         self.__matrix = np.zeros((8, 24), dtype=np.uint8)  # Create starting dot matrix design of all zeroes
         self.__text_thread = None
@@ -101,6 +111,8 @@ class DisplayReal(Display):
             print("WARNING: Matrix must be of shape (8, 24). Reshaping to fit.")
             arr = arr.reshape((8, 24))
         self.__matrix = arr
+        if self.device is None:
+            return
         with canvas(self.device) as draw:
             for x in range(0, self.device.width):
                 for y in range(0, self.device.height):
@@ -195,5 +207,7 @@ class DisplayReal(Display):
             0.0 <= intensity <= 1.0
         ), f"intensity [{intensity}] must be between 0.0 and 1.0 inclusive."
 
+        if self.device is None:
+            return
         contrast = int(intensity * 255)
         self.device.contrast(contrast)

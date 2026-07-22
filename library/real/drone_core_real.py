@@ -22,6 +22,7 @@ import controller_real
 import detector_real
 import display_real
 import flight_real
+import led_real
 import physics_real
 import state_real
 import telemetry_real
@@ -49,6 +50,7 @@ class DroneReal(Drone):
         self.detector = detector_real.DetectorReal()
         self.display = display_real.DisplayReal(isHeadless)
         self.flight = flight_real.FlightReal()
+        self.led = led_real.LedReal()
         self.physics = physics_real.PhysicsReal()
         self.state = state_real.StateReal()
         self.telemetry = telemetry_real.TelemetryReal()
@@ -111,8 +113,13 @@ class DroneReal(Drone):
             "    CTRL + Z on keyboard = force quit the program"
         )
 
-    def go(self) -> None:
+    def go(self, autostart: bool = False) -> None:
         self.__running = True
+        # Auto-start enters user program mode without the START button, so a
+        # program can run with no game controller connected. The safety pilot's
+        # OFFBOARD switch still gates any actual motion.
+        if autostart:
+            self.__handle_start()
         while self.__running:
             try:
                 self.__executor.spin_once()

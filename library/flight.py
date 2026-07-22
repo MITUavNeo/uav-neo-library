@@ -95,3 +95,37 @@ class Flight(abc.ABC):
             uav.flight.land()
         """
         pass
+
+    @abc.abstractmethod
+    def goto_position(self, east: float, up: float, north: float) -> None:
+        """
+        Commands the drone to fly to a world position and hold there.
+
+        Args:
+            east: Target east coordinate in meters.
+            up: Target up coordinate (altitude) in meters.
+            north: Target north coordinate in meters.
+
+        Note:
+            The argument order matches uav.physics.get_position(), which
+            returns (east, up, north), so a captured position can be passed
+            straight through:
+
+                start = uav.physics.get_position()
+                uav.flight.goto_position(start[0] + 1.0, start[1], start[2])
+
+            Coordinates are absolute in the world frame. On the real drone the
+            world origin is wherever the flight controller's EKF initialized, so
+            build targets as an offset from a position captured at flight time,
+            not as fixed numbers.
+
+            Call this every frame while flying to the target; poll
+            uav.physics.get_position() to decide when it has arrived. On the real
+            drone the flight controller closes the position loop; in simulation an
+            internal controller drives toward the target with velocity commands.
+
+        Example::
+
+            uav.flight.goto_position(target_east, target_up, target_north)
+        """
+        pass
