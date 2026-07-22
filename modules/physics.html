@@ -372,6 +372,26 @@ meters above sea level.</p>
 </div>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="physics.Physics.get_position">
+<span class="sig-name descname"><span class="pre">get_position</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">NDArray</span></span></span><a class="headerlink" href="#physics.Physics.get_position" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the drone’s true world position (simulation only).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A 3-element array (x_east, y_up, z_north) in meters.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Available in simulation only; the real drone has no ground-truth position.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pos</span> <span class="o">=</span> <span class="n">uav</span><span class="o">.</span><span class="n">physics</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+<span class="n">forward</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -439,6 +459,7 @@ meters above sea level.</p>
 <li><a class="reference internal" href="#physics.Physics.get_gps"><code class="docutils literal notranslate"><span class="pre">Physics.get_gps()</span></code></a></li>
 <li><a class="reference internal" href="#physics.Physics.get_linear_acceleration"><code class="docutils literal notranslate"><span class="pre">Physics.get_linear_acceleration()</span></code></a></li>
 <li><a class="reference internal" href="#physics.Physics.get_linear_velocity"><code class="docutils literal notranslate"><span class="pre">Physics.get_linear_velocity()</span></code></a></li>
+<li><a class="reference internal" href="#physics.Physics.get_position"><code class="docutils literal notranslate"><span class="pre">Physics.get_position()</span></code></a></li>
 </ul>
 </li>
 </ul>

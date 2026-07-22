@@ -273,8 +273,17 @@ the start of the current frame.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drone_core.Drone.go">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">go</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#drone_core.Drone.go" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">go</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">autostart</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#drone_core.Drone.go" title="Link to this definition">¶</a></dt>
 <dd><p>Starts the drone, beginning in default mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>autostart</strong> – If True, enter user program mode immediately instead of
+waiting for the START button. Lets a program run without a game
+controller (stop it with Ctrl-C). On the real drone the safety
+pilot’s OFFBOARD switch is still the gate for any motion. Ignored
+by the simulator, which begins on its own ENTER-key signal.</p>
+</dd>
+</dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>go blocks execution until the program is exited.</p>
